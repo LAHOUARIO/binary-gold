@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🟡 تسجيل الدخول - Binary Gold</title>
+  <style>
+    body {
+      background-color: #000;
+      color: gold;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 20px;
+    }
+    input, button {
+      padding: 10px;
+      font-size: 1rem;
+      margin: 10px;
+      border-radius: 8px;
+      border: none;
+    }
+    input {
+      width: 80%;
+      max-width: 300px;
+    }
+    button {
+      background-color: gold;
+      color: black;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .telegram-section {
+      margin-top: 40px;
+      font-size: 16px;
+      font-weight: bold;
+    }
+    .telegram-link {
+      color: gold;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      font-size: 16px;
+    }
+    .telegram-link img {
+      width: 24px;
+      height: 24px;
+    }
+    .pricing {
+      margin-top: 20px;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔐 تسجيل الدخول إلى Binary Gold</h1>
+
+  <input type="text" id="username" placeholder="👤 اسم المستخدم" required><br>
+  <input type="password" id="usercode" placeholder="🔑 الكود الخاص بك" required><br>
+  <button onclick="login()">🚪 دخول</button>
+
+  <!-- ✅ قسم التيليغرام والأسعار -->
+  <div class="telegram-section">
+    📩 للاشتراك تواصل معنا عبر التيليغرام:
+    <br>
+    <a class="telegram-link" href="https://t.me/binary_goldS" target="_blank">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg" alt="Telegram">
+      @binary_goldS
+    </a>
+
+    <div class="pricing">
+      💰 أسعار الاشتراك:<br>
+      5 دولار = شهر<br>
+      10 دولار = شهرين<br>
+      20 دولار = 5 أشهر
+    </div>
+  </div>
+
+  <script>
+    async function login() {
+      const username = document.getElementById("username").value.trim();
+      const code = document.getElementById("usercode").value.trim();
+
+      const res = await fetch("/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, code })
+      });
+
+      const data = await res.json();
+
+      if (data.allowed) {
+        localStorage.setItem("access", "granted");
+        localStorage.setItem("username", username);
+        window.location.href = "signals.html";
+      } else {
+        alert(data.message || "❌ اسم المستخدم أو الكود غير صحيح!");
+      }
+    }
+  </script>
+</body>
+</html>

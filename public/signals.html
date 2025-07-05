@@ -1,0 +1,195 @@
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📊 إشارات Binary Gold</title>
+  <style>
+    body {
+      background-color: #000;
+      color: gold;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 20px;
+      color: #ffcc00;
+    }
+    select, button {
+      padding: 12px;
+      font-size: 1rem;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: none;
+      width: 90%;
+      max-width: 400px;
+    }
+    button {
+      background-color: gold;
+      color: black;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .result-box {
+      margin-top: 20px;
+      background: #111;
+      border: 1px solid gold;
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .result-box p {
+      font-size: 1rem;
+      margin: 8px 0;
+    }
+    .highlight {
+      font-size: 1.8rem;
+      color: gold;
+      margin-top: 15px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 30px;
+    }
+    table, th, td {
+      border: 1px solid gold;
+    }
+    th, td {
+      padding: 10px;
+      text-align: center;
+    }
+    .advice {
+      font-size: 1.4rem;
+      color: red;
+      margin-top: 30px;
+      font-weight: bold;
+    }
+    ul.indicator-list {
+      list-style: none;
+      padding: 0;
+      margin: 10px auto;
+      max-width: 90%;
+      text-align: right;
+    }
+    ul.indicator-list li {
+      background-color: #222;
+      border: 1px solid #555;
+      margin: 5px 0;
+      padding: 10px;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <h1>📊 إشارات Binary Gold</h1>
+
+  <select id="symbol">
+    <option value="EUR/USD">EUR/USD</option>
+    <option value="USD/JPY">USD/JPY</option>
+    <option value="GBP/USD">GBP/USD</option>
+    <option value="AUD/USD">AUD/USD</option>
+    <option value="EUR/JPY">EUR/JPY</option>
+    <option value="NZD/USD">NZD/USD</option>
+    <option value="USD/CAD">USD/CAD</option>
+  </select>
+
+  <select id="timeframe">
+    <option value="5">M5</option>
+    <option value="15">M15</option>
+  </select>
+
+  <button onclick="analyze()">🔍 تحليل الإشارة</button>
+
+  <div class="result-box" id="result" style="display:none;">
+    <div class="highlight" id="signalText"></div>
+    <p id="strength"></p>
+    <p id="entryTime"></p>
+    <p id="trend"></p>
+    <ul class="indicator-list" id="indicators"></ul>
+  </div>
+
+  <div class="advice" id="advice" style="display:none;">💡 بعد الربح، اخرج فورًا ولا تطمع!</div>
+
+  <table id="historyTable">
+    <thead>
+      <tr>
+        <th>الزوج</th>
+        <th>الفريم</th>
+        <th>الإشارة</th>
+        <th>القوة</th>
+        <th>الوقت</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    async function analyze() {
+      const symbol = document.getElementById("symbol").value;
+      const timeframe = document.getElementById("timeframe").value;
+
+      try {
+        const res = await fetch("/analyze", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ symbol, timeframe })
+        });
+
+        const data = await res.json();
+        console.log("📊 نتيجة التحليل:", data);
+
+        const signalText = document.getElementById("signalText");
+        const strength = document.getElementById("strength");
+        const entryTime = document.getElementById("entryTime");
+        const indicators = document.getElementById("indicators");
+        const trend = document.getElementById("trend");
+        const resultBox = document.getElementById("result");
+        const advice = document.getElementById("advice");
+
+        if (!data || data.error) {
+          signalText.innerText = "❌ فشل التحليل: " + (data.error || "مشكلة غير معروفة");
+          resultBox.style.display = "block";
+          advice.style.display = "none";
+          return;
+        }
+
+        resultBox.style.display = "block";
+        signalText.innerText = data.signal || "↔ لا توجد إشارة";
+        strength.innerText = "قوة الإشارة: " + (data.strength || "N/A");
+        entryTime.innerText = "⏱ دخول الساعة: " + (data.time || "N/A");
+        trend.innerText = "📈 قوة الترند (ADX): " + (data.values?.ADX || "N/A");
+
+        indicators.innerHTML = "";
+        (data.conditions || []).forEach(c => {
+          const arrow = c.includes("Bullish") || c.includes("Oversold") || c.includes("Price >") ? "⬆" :
+                        c.includes("Bearish") || c.includes("Overbought") || c.includes("Below") || c.includes("Above") ? "⬇" : "";
+          const li = document.createElement("li");
+          li.textContent = `${arrow} ${c}`;
+          indicators.appendChild(li);
+        });
+
+        if (data.signal?.includes("CALL") || data.signal?.includes("PUT")) {
+          advice.style.display = "block";
+        } else {
+          advice.style.display = "none";
+        }
+
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${symbol}</td>
+          <td>M${timeframe}</td>
+          <td>${data.signal || "-"}</td>
+          <td>${data.strength || "-"}</td>
+          <td>${data.time || "-"}</td>
+        `;
+        document.querySelector("#historyTable tbody").prepend(row);
+
+      } catch (error) {
+        console.error("❌ فشل في الاتصال بالسيرفر:", error);
+        alert("⚠️ فشل الاتصال بالسيرفر.");
+      }
+    }
+  </script>
+</body>
+</html>

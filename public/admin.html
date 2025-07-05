@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>➕ إضافة مستخدم - Binary Gold</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      background: #000;
+      color: gold;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 30px;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    input, select, button {
+      padding: 10px;
+      margin: 10px;
+      font-size: 1rem;
+      border-radius: 8px;
+      border: none;
+    }
+
+    input, select {
+      width: 250px;
+    }
+
+    button {
+      background-color: gold;
+      color: black;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .message {
+      margin-top: 15px;
+      font-size: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>➕ إضافة مستخدم جديد</h1>
+
+  <input id="username" placeholder="👤 اسم المستخدم" /><br>
+  <input id="code" placeholder="🔑 الكود" /><br>
+  <select id="price">
+    <option value="10">10 دولار (شهرين)</option>
+    <option value="20">20 دولار (5 شهور)</option>
+    <option value="5">5 دولار (شهر)</option>
+  </select><br>
+  <button onclick="addUser()">✅ إضافة</button>
+
+  <div class="message" id="msg"></div>
+
+  <script>
+    async function addUser() {
+      const username = document.getElementById("username").value.trim();
+      const code = document.getElementById("code").value.trim();
+      const price = parseFloat(document.getElementById("price").value);
+      const msg = document.getElementById("msg");
+
+      if (!username || !code) {
+        msg.innerText = "❗يرجى ملء كل الحقول.";
+        msg.style.color = "red";
+        return;
+      }
+
+      try {
+        const res = await fetch("/admin/add-user", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, code, price })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          msg.innerText = data.message;
+          msg.style.color = "lime";
+          document.getElementById("username").value = "";
+          document.getElementById("code").value = "";
+        } else {
+          msg.innerText = data.message || "⚠️ فشل في الإضافة.";
+          msg.style.color = "red";
+        }
+
+      } catch (err) {
+        msg.innerText = "⚠️ خطأ في الاتصال بالخادم.";
+        msg.style.color = "red";
+      }
+    }
+  </script>
+
+</body>
+</html>
